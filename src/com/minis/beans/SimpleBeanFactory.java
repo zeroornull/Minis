@@ -13,21 +13,32 @@ public class SimpleBeanFactory implements BeanFactory{
     public SimpleBeanFactory() {}
 
     @Override
-    public Object getBean(String beanName) throws NoSuchBeanDefinitionException {
+    public Object getBean(String beanName) throws NoSuchBeanDefinitionException{
         Object singleton = singletons.get(beanName);
-        if (singleton != null){
+        if (singleton == null) {
             int i = beanNames.indexOf(beanName);
-            if(i==-1){
+            if (i == -1) {
                 throw new NoSuchBeanDefinitionException();
-            }else {
+            }
+            else {
                 BeanDefinition bd = beanDefinitions.get(i);
+                try {
+                    singleton=Class.forName(bd.getClassName()).newInstance();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+                singletons.put(bd.getId(),singleton);
             }
         }
-        return null;
+        return singleton;
     }
-
     @Override
     public void registerBeanDefinition(BeanDefinition bd) {
-
+        this.beanDefinitions.add(bd);
+        this.beanNames.add(bd.getId());
     }
 }
