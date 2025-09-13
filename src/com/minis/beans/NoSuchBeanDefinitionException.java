@@ -1,5 +1,5 @@
 package com.minis.beans;
 
-public class NoSuchBeanDefinitionException extends Exception{
+public class NoSuchBeanDefinitionException extends Exception {
 
 }
