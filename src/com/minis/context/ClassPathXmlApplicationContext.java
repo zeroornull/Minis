@@ -1,6 +1,9 @@
 package com.minis.context;
 
-import com.minis.beans.*;
+import com.minis.beans.BeanFactory;
+import com.minis.beans.BeansException;
+import com.minis.beans.SimpleBeanFactory;
+import com.minis.beans.XmlBeanDefinitionReader;
 import com.minis.core.ClassPathXmlResource;
 import com.minis.core.Resource;
 
@@ -9,11 +12,19 @@ public class ClassPathXmlApplicationContext implements BeanFactory, ApplicationE
     SimpleBeanFactory beanFactory;
 
     public ClassPathXmlApplicationContext(String fileName) {
+        this(fileName, true);
+    }
+
+    public ClassPathXmlApplicationContext(String fileName, boolean isRefresh) {
         Resource res = new ClassPathXmlResource(fileName);
         SimpleBeanFactory bf = new SimpleBeanFactory();
         XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(bf);
         reader.loadBeanDefinitions(res);
         this.beanFactory = bf;
+
+        if (isRefresh) {
+            this.beanFactory.refresh();
+        }
     }
 
     @Override
@@ -21,6 +32,7 @@ public class ClassPathXmlApplicationContext implements BeanFactory, ApplicationE
         return this.beanFactory.getBean(beanName);
     }
 
+    @Override
     public boolean containsBean(String name) {
         return this.beanFactory.containsBean(name);
     }
@@ -50,6 +62,5 @@ public class ClassPathXmlApplicationContext implements BeanFactory, ApplicationE
         // TODO Auto-generated method stub
         return null;
     }
-
 
 }

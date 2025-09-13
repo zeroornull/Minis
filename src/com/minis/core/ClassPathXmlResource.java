@@ -16,7 +16,6 @@ public class ClassPathXmlResource implements Resource {
 
     public ClassPathXmlResource(String fileName) {
         SAXReader saxReader = new SAXReader();
-
         URL xmlPath = this.getClass().getClassLoader().getResource(fileName);
         try {
             this.document = saxReader.read(xmlPath);
@@ -27,7 +26,6 @@ public class ClassPathXmlResource implements Resource {
         }
     }
 
-
     @Override
     public boolean hasNext() {
         return this.elementIterator.hasNext();
@@ -37,4 +35,6 @@ public class ClassPathXmlResource implements Resource {
     public Object next() {
         return this.elementIterator.next();
     }
+
+
 }
