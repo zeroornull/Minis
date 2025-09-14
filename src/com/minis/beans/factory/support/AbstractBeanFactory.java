@@ -3,8 +3,8 @@ package com.minis.beans.factory.support;
 import com.minis.beans.BeansException;
 import com.minis.beans.PropertyValue;
 import com.minis.beans.PropertyValues;
-import com.minis.beans.factory.BeanFactory;
 import com.minis.beans.factory.config.BeanDefinition;
+import com.minis.beans.factory.config.ConfigurableBeanFactory;
 import com.minis.beans.factory.config.ConstructorArgumentValue;
 import com.minis.beans.factory.config.ConstructorArgumentValues;
 
@@ -17,9 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements BeanFactory,BeanDefinitionRegistry{
-    private Map<String,BeanDefinition> beanDefinitionMap=new ConcurrentHashMap<>(256);
-    private List<String> beanDefinitionNames=new ArrayList<>();
+public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory,BeanDefinitionRegistry{
+    protected Map<String,BeanDefinition> beanDefinitionMap=new ConcurrentHashMap<>(256);
+    protected List<String> beanDefinitionNames=new ArrayList<>();
 	private final Map<String, Object> earlySingletonObjects = new HashMap<String, Object>(16);
 
     public AbstractBeanFactory() {
@@ -67,7 +67,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     }
     
     private void invokeInitMethod(BeanDefinition bd, Object obj) {
-    	Class<?> clz = obj.getClass();
+    	Class<?> clz = bd.getClass();
 		Method method = null;
 		try {
 			method = clz.getMethod(bd.getInitMethodName());
@@ -265,6 +265,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
 					}
     				try {
 						paramValues[0] = getBean((String)pValue);
+						
 					} catch (BeansException e) {
 						e.printStackTrace();
 					}

@@ -18,7 +18,4 @@ public class BaseService {
 		System.out.print("Base Service says hello");
 		bbs.sayHello();
 	}
-	public void init() {
-		System.out.print("Base Service init method.");
-	}
 }

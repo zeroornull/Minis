@@ -3,7 +3,6 @@ package com.minis.beans;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class PropertyValues{
 	private final List<PropertyValue> propertyValueList;
 
