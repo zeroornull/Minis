@@ -1,18 +1,14 @@
 package com.minis.web.servlet;
 
-import com.minis.beans.BeansException;
 import com.minis.web.AnnotationConfigWebApplicationContext;
 import com.minis.web.WebApplicationContext;
-import com.minis.web.XmlScanComponentHelper;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
+import java.util.Map;
 
 /**
  * Servlet implementation class DispatcherServlet
@@ -23,14 +19,11 @@ public class DispatcherServlet extends HttpServlet {
 	private WebApplicationContext webApplicationContext;
 	private WebApplicationContext parentApplicationContext;
 	
-    private String sContextConfigLocation;
-    private List<String> packageNames = new ArrayList<>();
-    private Map<String,Object> controllerObjs = new HashMap<>();
-    private List<String> controllerNames = new ArrayList<>();
-    private Map<String,Class<?>> controllerClasses = new HashMap<>();    
+    private String sContextConfigLocation; 
     
 	private HandlerMapping handlerMapping;
 	private HandlerAdapter handlerAdapter;
+	private ViewResolver viewResolver;
 
     public DispatcherServlet() {
         super();
@@ -40,31 +33,18 @@ public class DispatcherServlet extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
     	super.init(config);
     	
-    	
     	this.parentApplicationContext = 
     			(WebApplicationContext) this.getServletContext().getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
     	
-        sContextConfigLocation = config.getInitParameter("contextConfigLocation");
+        this.sContextConfigLocation = config.getInitParameter("contextConfigLocation");
         
-        URL xmlPath = null;
-		try {
-			xmlPath = this.getServletContext().getResource(sContextConfigLocation);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-        
-        this.packageNames = XmlScanComponentHelper.getNodeValue(xmlPath);
-        
-    	this.webApplicationContext = new AnnotationConfigWebApplicationContext(sContextConfigLocation,this.parentApplicationContext);
-
+    	this.webApplicationContext = new AnnotationConfigWebApplicationContext(this.sContextConfigLocation,this.parentApplicationContext);
 
         Refresh();
         
     }
     
     protected void Refresh() {
-    	initController();
-    	
 		initHandlerMappings(this.webApplicationContext);
 		initHandlerAdapters(this.webApplicationContext);
 		initViewResolvers(this.webApplicationContext);
@@ -82,24 +62,6 @@ public class DispatcherServlet extends HttpServlet {
     	
     }
     
-    protected void initController() {
-    	this.controllerNames = Arrays.asList(this.webApplicationContext.getBeanDefinitionNames());
-    	for (String controllerName : this.controllerNames) {
-			try {
-				this.controllerClasses.put(controllerName,Class.forName(controllerName));
-			} catch (ClassNotFoundException e1) {
-				e1.printStackTrace();
-			}
-			try {
-				this.controllerObjs.put(controllerName,this.webApplicationContext.getBean(controllerName));
-		    	System.out.println("controller : "+controllerName);
-			} catch (BeansException e) {
-				e.printStackTrace();
-			}
-    	}
-
-    }
-	
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response) {
 		request.setAttribute(WEB_APPLICATION_CONTEXT_ATTRIBUTE, this.webApplicationContext);
@@ -116,6 +78,7 @@ public class DispatcherServlet extends HttpServlet {
 	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HttpServletRequest processedRequest = request;
 		HandlerMethod handlerMethod = null;
+		ModelAndView mv = null;
 		
 		handlerMethod = this.handlerMapping.getHandler(processedRequest);
 		if (handlerMethod == null) {
@@ -124,8 +87,36 @@ public class DispatcherServlet extends HttpServlet {
 		
 		HandlerAdapter ha = this.handlerAdapter;
 
-		ha.handle(processedRequest, response, handlerMethod);
+		mv = ha.handle(processedRequest, response, handlerMethod);
+
+		//render(processedRequest, response, mv);
 	}
 	
+	protected void render( HttpServletRequest request, HttpServletResponse response,ModelAndView mv) throws Exception {
+		View view;
+		String viewName = mv.getViewName();
+		if (viewName != null) {
+			// We need to resolve the view name.
+			view = resolveViewName(viewName, mv.getModel(), request);
+		}
+		else {
+			view = mv.getView();
+		}
+
+		view.render(mv.getModel(), request, response);
+	}
+	
+	protected View resolveViewName(String viewName, Map<String, Object> model,
+			HttpServletRequest request) throws Exception {
+		if (this.viewResolver != null) {
+			View view = viewResolver.resolveViewName(viewName);
+			if (view != null) {
+				return view;
+			}
+		}
+		return null;
+	}
+
+
 
 }
